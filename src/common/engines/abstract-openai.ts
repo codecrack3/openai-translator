@@ -93,14 +93,21 @@ export abstract class AbstractOpenAI extends AbstractEngine {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     async getBaseRequestBody(): Promise<Record<string, any>> {
         const model = await this.getAPIModel()
-        return {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const body: Record<string, any> = {
             model,
-            temperature: 0,
             top_p: 1,
-            frequency_penalty: 1,
-            presence_penalty: 1,
             stream: true,
         }
+
+        // GPT-5 models don't support temperature: 0, only default value (1)
+        if (model && !model.includes('gpt-5')) {
+            body.temperature = 0
+            body.presence_penalty = 1
+            body.frequency_penalty = 1
+        }
+
+        return body
     }
 
     async sendMessage(req: IMessageRequest): Promise<void> {
